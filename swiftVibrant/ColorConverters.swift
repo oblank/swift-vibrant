@@ -56,20 +56,37 @@ public func hexToRgb(_ hex: String)->RGB? {
     if hex.hasPrefix("#") {
         let start = hex.index(hex.startIndex, offsetBy: 1)
         let hexColor = String(hex[start...])
-        
-        if hexColor.count == 8 {
-            let scanner = Scanner(string: hexColor)
-            var hexDouble: UInt64 = 0
-            
-            
-            if scanner.scanHexInt64(&hexDouble) {
-                r = UInt8(hexDouble & 0xff000000) >> 24
-                g = UInt8(hexDouble & 0x00ff0000) >> 16
-                b = UInt8(hexDouble & 0x0000ff00) >> 8
-                
-                return (r, g, b)
-            }
+
+        // copy from chatgpt
+        let hex = hexColor.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int64 = UInt64()
+        Scanner(string: hex).scanHexInt64(&int64)
+        let r, g, b, a: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (r, g, b, a) = ((int64 >> 8) * 17, (int64 >> 4 & 0xF) * 17, (int64 & 0xF) * 17, 255)
+        case 6: // RGB (24-bit)
+            (r, g, b, a) = (int64 >> 16, int64 >> 8 & 0xFF, int64 & 0xFF, 255)
+        case 8: // RGBA (32-bit)
+            (r, g, b, a) = (int64 >> 24, int64 >> 16 & 0xFF, int64 >> 8 & 0xFF, int64 & 0xFF)
+        default:
+            (r, g, b, a) = (1, 1, 1, 1)
         }
+        return (UInt8(r), UInt8(g), UInt8(b))
+        
+        // if hexColor.count == 8 {
+        //     let scanner = Scanner(string: hexColor)
+        //     var hexDouble: UInt64 = 0
+            
+            
+        //     if scanner.scanHexInt64(&hexDouble) {
+        //         r = UInt8(hexDouble & 0xff000000) >> 24
+        //         g = UInt8(hexDouble & 0x00ff0000) >> 16
+        //         b = UInt8(hexDouble & 0x0000ff00) >> 8
+                
+        //         return (r, g, b)
+        //     }
+        // }
     }
     return nil
 }
